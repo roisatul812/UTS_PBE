@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	seedFlag := flag.Bool("seed", false, "Run database seed")
+	flag.Parse()
+
 	cfg := config.LoadConfig()
 
 	db, err := database.ConnectDB(cfg)
@@ -19,6 +23,17 @@ func main() {
 
 	if err := database.RunMigrations(db, "migrations"); err != nil {
 		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	if *seedFlag {
+		if err := database.Seed(db); err != nil {
+			log.Fatalf("Failed to seed database: %v", err)
+		}
+	} else {
+		// Auto seed if users table is empty
+		if err := database.Seed(db); err != nil {
+			log.Printf("Seed check/run error: %v", err)
+		}
 	}
 
 	app := fiber.New()
