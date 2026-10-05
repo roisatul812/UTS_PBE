@@ -5,8 +5,12 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"uts-pbe-siakad/app/handler"
+	"uts-pbe-siakad/app/repository"
+	"uts-pbe-siakad/app/service"
 	"uts-pbe-siakad/config"
 	"uts-pbe-siakad/database"
+	"uts-pbe-siakad/route"
 )
 
 func main() {
@@ -30,13 +34,25 @@ func main() {
 			log.Fatalf("Failed to seed database: %v", err)
 		}
 	} else {
-		// Auto seed if users table is empty
+		// Auto seed if empty
 		if err := database.Seed(db); err != nil {
 			log.Printf("Seed check/run error: %v", err)
 		}
 	}
 
 	app := fiber.New()
+
+	// Dependency Injection
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo)
+	authHandler := handler.NewAuthHandler(authService)
+
+	// Setup routes
+	route.SetupRoutes(&route.RouterConfig{
+		App:         app,
+		DB:          db,
+		AuthHandler: authHandler,
+	})
 
 	log.Printf("Server starting on port %s...", cfg.Port)
 	if err := app.Listen(":" + cfg.Port); err != nil {
