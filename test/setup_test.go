@@ -17,6 +17,10 @@ import (
 
 var testApp *fiber.App
 var testDB *sql.DB
+var userRepo repository.UserRepository
+var studentRepo repository.StudentRepository
+var authService service.AuthService
+var studentService service.StudentService
 
 func TestMain(m *testing.M) {
 	cfg := config.LoadConfig()
@@ -36,14 +40,20 @@ func TestMain(m *testing.M) {
 
 	testApp = fiber.New()
 
-	userRepo := repository.NewUserRepository(testDB)
-	authService := service.NewAuthService(userRepo)
+	userRepo = repository.NewUserRepository(testDB)
+	studentRepo = repository.NewStudentRepository(testDB)
+
+	authService = service.NewAuthService(userRepo)
+	studentService = service.NewStudentService(studentRepo, userRepo)
+
 	authHandler := handler.NewAuthHandler(authService)
+	studentHandler := handler.NewStudentHandler(studentService)
 
 	route.SetupRoutes(&route.RouterConfig{
-		App:         testApp,
-		DB:          testDB,
-		AuthHandler: authHandler,
+		App:            testApp,
+		DB:             testDB,
+		AuthHandler:    authHandler,
+		StudentHandler: studentHandler,
 	})
 
 	code := m.Run()
