@@ -46,22 +46,26 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	studentRepo := repository.NewStudentRepository(db)
 	courseRepo := repository.NewCourseRepository(db)
+	enrollmentRepo := repository.NewEnrollmentRepository(db)
 
 	authService := service.NewAuthService(userRepo)
 	studentService := service.NewStudentService(studentRepo, userRepo)
 	courseService := service.NewCourseService(courseRepo)
+	enrollmentService := service.NewEnrollmentService(enrollmentRepo, studentRepo, studentService)
 
 	authHandler := handler.NewAuthHandler(authService)
 	studentHandler := handler.NewStudentHandler(studentService)
 	courseHandler := handler.NewCourseHandler(courseService)
+	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService)
 
 	// Setup routes
 	route.SetupRoutes(&route.RouterConfig{
-		App:            app,
-		DB:             db,
-		AuthHandler:    authHandler,
-		StudentHandler: studentHandler,
-		CourseHandler:  courseHandler,
+		App:               app,
+		DB:                db,
+		AuthHandler:       authHandler,
+		StudentHandler:    studentHandler,
+		CourseHandler:     courseHandler,
+		EnrollmentHandler: enrollmentHandler,
 	})
 
 	log.Printf("Server starting on port %s...", cfg.Port)

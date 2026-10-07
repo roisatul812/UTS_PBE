@@ -20,9 +20,11 @@ var testDB *sql.DB
 var userRepo repository.UserRepository
 var studentRepo repository.StudentRepository
 var courseRepo repository.CourseRepository
+var enrollmentRepo repository.EnrollmentRepository
 var authService service.AuthService
 var studentService service.StudentService
 var courseService service.CourseService
+var enrollmentService service.EnrollmentService
 
 func TestMain(m *testing.M) {
 	cfg := config.LoadConfig()
@@ -45,21 +47,25 @@ func TestMain(m *testing.M) {
 	userRepo = repository.NewUserRepository(testDB)
 	studentRepo = repository.NewStudentRepository(testDB)
 	courseRepo = repository.NewCourseRepository(testDB)
+	enrollmentRepo = repository.NewEnrollmentRepository(testDB)
 
 	authService = service.NewAuthService(userRepo)
 	studentService = service.NewStudentService(studentRepo, userRepo)
 	courseService = service.NewCourseService(courseRepo)
+	enrollmentService = service.NewEnrollmentService(enrollmentRepo, studentRepo, studentService)
 
 	authHandler := handler.NewAuthHandler(authService)
 	studentHandler := handler.NewStudentHandler(studentService)
 	courseHandler := handler.NewCourseHandler(courseService)
+	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService)
 
 	route.SetupRoutes(&route.RouterConfig{
-		App:            testApp,
-		DB:             testDB,
-		AuthHandler:    authHandler,
-		StudentHandler: studentHandler,
-		CourseHandler:  courseHandler,
+		App:               testApp,
+		DB:                testDB,
+		AuthHandler:       authHandler,
+		StudentHandler:    studentHandler,
+		CourseHandler:     courseHandler,
+		EnrollmentHandler: enrollmentHandler,
 	})
 
 	code := m.Run()
