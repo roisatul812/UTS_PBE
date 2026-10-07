@@ -45,12 +45,15 @@ func main() {
 	// Dependency Injection
 	userRepo := repository.NewUserRepository(db)
 	studentRepo := repository.NewStudentRepository(db)
+	courseRepo := repository.NewCourseRepository(db)
 
 	authService := service.NewAuthService(userRepo)
 	studentService := service.NewStudentService(studentRepo, userRepo)
+	courseService := service.NewCourseService(courseRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	studentHandler := handler.NewStudentHandler(studentService)
+	courseHandler := handler.NewCourseHandler(courseService)
 
 	// Setup routes
 	route.SetupRoutes(&route.RouterConfig{
@@ -58,6 +61,7 @@ func main() {
 		DB:             db,
 		AuthHandler:    authHandler,
 		StudentHandler: studentHandler,
+		CourseHandler:  courseHandler,
 	})
 
 	log.Printf("Server starting on port %s...", cfg.Port)

@@ -13,6 +13,7 @@ type RouterConfig struct {
 	DB             *sql.DB
 	AuthHandler    *handler.AuthHandler
 	StudentHandler *handler.StudentHandler
+	CourseHandler  *handler.CourseHandler
 }
 
 func SetupRoutes(cfg *RouterConfig) {
@@ -42,5 +43,14 @@ func SetupRoutes(cfg *RouterConfig) {
 
 		// DELETE /api/v1/students/:id (Admin only)
 		students.Delete("/:id", middleware.RequireRole("admin"), cfg.StudentHandler.Delete)
+	}
+
+	// 3. Course routes
+	if cfg.CourseHandler != nil {
+		courses := api.Group("/courses")
+		courses.Use(middleware.AuthMiddleware(cfg.DB))
+
+		// GET /api/v1/courses (All logged-in roles)
+		courses.Get("/", cfg.CourseHandler.GetAll)
 	}
 }
